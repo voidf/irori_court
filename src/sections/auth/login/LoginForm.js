@@ -8,11 +8,11 @@ import { Link, Stack, Checkbox, TextField, IconButton, InputAdornment, FormContr
 import { LoadingButton } from '@mui/lab';
 // component
 import Iconify from '../../../components/Iconify';
-import STRINGS from '../../../localization/str';
 import U from '../../../api/urls';
+import AUTH from '../../../localization/str';
 
 // ----------------------------------------------------------------------
-
+const STRINGS = AUTH.auth;
 export default function LoginForm() {
   const navigate = useNavigate();
 
@@ -30,19 +30,31 @@ export default function LoginForm() {
       remember: true,
     },
     validationSchema: LoginSchema,
-    onSubmit: (values) => {
+    onSubmit: (values, {setSubmitting}) => {
       const formData = new FormData();
       formData.append("username", values.handle);
       formData.append("password", values.password);
 
-      console.log(values);
       axios.post(U(`/api/v1/auth/login?expires=${values.remember?86400*7:86400}`), formData).then(resp=>{
-        console.log(resp.data);
-        console.log(resp.status);
-        console.log(resp.statusText);
-        // if(resp.status)
+        setSubmitting(false);
+
+        if(resp.status !== 200 || !('jwt' in resp.data))
+        {
+          alert(`${STRINGS.loginFailed}${resp.data}`);
+          return;
+        }
+        
         navigate('/dashboard', { replace: true });
-      })
+      }).catch((reason)=>{
+        setSubmitting(false);
+
+        if(reason.response.status === 401)
+        {
+          alert(`${STRINGS.unauthorized}\n${reason.response.data.detail}`);
+          return;
+        }
+        alert(reason);
+      });
     },
   });
 
@@ -62,8 +74,8 @@ export default function LoginForm() {
             type="text"
             label={STRINGS.handle}
             {...getFieldProps('handle')}
-            // error={Boolean(touched.email && errors.email)}
-            // helperText={touched.email && errors.email}
+            error={Boolean(touched.handle && errors.handle)}
+            helperText={touched.handle && errors.handle}
           />
 
           <TextField

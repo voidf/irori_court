@@ -1,4 +1,6 @@
 import * as Yup from 'yup';
+import axios from 'axios';
+
 import { useState } from 'react';
 import { useFormik, Form, FormikProvider } from 'formik';
 import { useNavigate } from 'react-router-dom';
@@ -7,8 +9,12 @@ import { Stack, TextField, IconButton, InputAdornment } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 // component
 import Iconify from '../../../components/Iconify';
+import AUTH from '../../../localization/str';
+import U from '../../../api/urls';
 
 // ----------------------------------------------------------------------
+
+const STRINGS = AUTH.auth;
 
 export default function RegisterForm() {
   const navigate = useNavigate();
@@ -16,22 +22,49 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   const RegisterSchema = Yup.object().shape({
-    firstName: Yup.string().min(2, 'Too Short!').max(50, 'Too Long!').required('First name required'),
-    lastName: Yup.string().min(2, 'Too Short!').max(50, 'Too Long!').required('Last name required'),
-    email: Yup.string().email('Email must be a valid email address').required('Email is required'),
-    password: Yup.string().required('Password is required'),
+    handle: Yup.string().required(STRINGS.handleRequired),
+    password: Yup.string().required(STRINGS.passwordRequired),
   });
 
   const formik = useFormik({
     initialValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
+      handle: '',
       password: '',
     },
     validationSchema: RegisterSchema,
-    onSubmit: () => {
-      navigate('/dashboard', { replace: true });
+    onSubmit: (values, {setSubmitting}) => {
+      const formData = new FormData();
+      formData.append("username", values.handle);
+      formData.append("password", values.password);
+      console.log(values);
+
+      axios.post(U(`/api/v1/auth/register`), formData).then(resp=>{
+        setSubmitting(false);
+
+        if(resp.status !== 200 || !('jwt' in resp.data))
+        {
+          alert(`${STRINGS.registerFailed}${resp.data}`);
+          return;
+        }
+        
+        navigate('/dashboard', { replace: true });
+      }).catch((reason)=>{
+        setSubmitting(false);
+
+        if(reason.response.status === 400)
+        {
+          if(reason.response.data.detail === 'user handle already exists')
+          {
+            alert(`${STRINGS.alreadyExists}\n${reason.response.data.detail}`);
+          }
+          else if(reason.response.data.detail === 'handle or password cannot be empty')
+          {
+            alert(`${STRINGS.cannotEmpty}\n${reason.response.data.detail}`);
+          }
+          return;
+        }
+        alert(reason);
+      });
     },
   });
 
@@ -41,7 +74,7 @@ export default function RegisterForm() {
     <FormikProvider value={formik}>
       <Form autoComplete="off" noValidate onSubmit={handleSubmit}>
         <Stack spacing={3}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          {/* <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
               fullWidth
               label="First name"
@@ -57,23 +90,23 @@ export default function RegisterForm() {
               error={Boolean(touched.lastName && errors.lastName)}
               helperText={touched.lastName && errors.lastName}
             />
-          </Stack>
+          </Stack> */}
 
           <TextField
             fullWidth
-            autoComplete="username"
-            type="email"
-            label="Email address"
-            {...getFieldProps('email')}
-            error={Boolean(touched.email && errors.email)}
-            helperText={touched.email && errors.email}
+            autoComplete="handle"
+            type="text"
+            label={STRINGS.handle}
+            {...getFieldProps('handle')}
+            error={Boolean(touched.handle && errors.handle)}
+            helperText={touched.handle && errors.handle}
           />
 
           <TextField
             fullWidth
             autoComplete="current-password"
             type={showPassword ? 'text' : 'password'}
-            label="Password"
+            label={STRINGS.password}
             {...getFieldProps('password')}
             InputProps={{
               endAdornment: (
