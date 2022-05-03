@@ -1,4 +1,5 @@
 import * as Yup from 'yup';
+import axios from 'axios';
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useFormik, Form, FormikProvider } from 'formik';
@@ -7,6 +8,8 @@ import { Link, Stack, Checkbox, TextField, IconButton, InputAdornment, FormContr
 import { LoadingButton } from '@mui/lab';
 // component
 import Iconify from '../../../components/Iconify';
+import STRINGS from '../../../localization/str';
+import U from '../../../api/urls';
 
 // ----------------------------------------------------------------------
 
@@ -16,19 +19,30 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   const LoginSchema = Yup.object().shape({
-    email: Yup.string().email('Email must be a valid email address').required('Email is required'),
-    password: Yup.string().required('Password is required'),
+    handle: Yup.string().required(STRINGS.handleRequired),
+    password: Yup.string().required(STRINGS.passwordRequired),
   });
 
   const formik = useFormik({
     initialValues: {
-      email: '',
+      handle: '',
       password: '',
       remember: true,
     },
     validationSchema: LoginSchema,
-    onSubmit: () => {
-      navigate('/dashboard', { replace: true });
+    onSubmit: (values) => {
+      const formData = new FormData();
+      formData.append("username", values.handle);
+      formData.append("password", values.password);
+
+      console.log(values);
+      axios.post(U(`/api/v1/auth/login?expires=${values.remember?86400*7:86400}`), formData).then(resp=>{
+        console.log(resp.data);
+        console.log(resp.status);
+        console.log(resp.statusText);
+        // if(resp.status)
+        navigate('/dashboard', { replace: true });
+      })
     },
   });
 
@@ -44,19 +58,19 @@ export default function LoginForm() {
         <Stack spacing={3}>
           <TextField
             fullWidth
-            autoComplete="username"
-            type="email"
-            label="Email address"
-            {...getFieldProps('email')}
-            error={Boolean(touched.email && errors.email)}
-            helperText={touched.email && errors.email}
+            autoComplete="handle"
+            type="text"
+            label={STRINGS.handle}
+            {...getFieldProps('handle')}
+            // error={Boolean(touched.email && errors.email)}
+            // helperText={touched.email && errors.email}
           />
 
           <TextField
             fullWidth
             autoComplete="current-password"
             type={showPassword ? 'text' : 'password'}
-            label="Password"
+            label={STRINGS.password}
             {...getFieldProps('password')}
             InputProps={{
               endAdornment: (
