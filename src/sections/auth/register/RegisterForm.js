@@ -13,7 +13,7 @@ import AUTH from '../../../localization/str';
 import U from '../../../api/urls';
 
 // ----------------------------------------------------------------------
-
+axios.defaults.withCredentials = true;
 const STRINGS = AUTH.auth;
 
 export default function RegisterForm() {
@@ -38,7 +38,7 @@ export default function RegisterForm() {
       formData.append("password", values.password);
       console.log(values);
 
-      axios.post(U(`/api/v1/auth/register`), formData).then(resp=>{
+      axios.post(U(`/auth/register`), formData, {withCredentials: true}).then(resp=>{
         setSubmitting(false);
 
         if(resp.status !== 200 || !('jwt' in resp.data))

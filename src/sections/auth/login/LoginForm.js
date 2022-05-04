@@ -12,7 +12,9 @@ import U from '../../../api/urls';
 import AUTH from '../../../localization/str';
 
 // ----------------------------------------------------------------------
+axios.defaults.withCredentials = true;
 const STRINGS = AUTH.auth;
+
 export default function LoginForm() {
   const navigate = useNavigate();
 
@@ -35,7 +37,7 @@ export default function LoginForm() {
       formData.append("username", values.handle);
       formData.append("password", values.password);
 
-      axios.post(U(`/api/v1/auth/login?expires=${values.remember?86400*7:86400}`), formData).then(resp=>{
+      axios.post(U(`/auth/login?expires=${values.remember?86400*7:86400}`), formData, {withCredentials: true}).then(resp=>{
         setSubmitting(false);
 
         if(resp.status !== 200 || !('jwt' in resp.data))
@@ -101,16 +103,16 @@ export default function LoginForm() {
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ my: 2 }}>
           <FormControlLabel
             control={<Checkbox {...getFieldProps('remember')} checked={values.remember} />}
-            label="Remember me"
+            label={STRINGS.remember}
           />
 
-          <Link component={RouterLink} variant="subtitle2" to="#" underline="hover">
-            Forgot password?
+          <Link component={RouterLink} variant="subtitle2" to="#建议重开" underline="hover">
+            {STRINGS.forgotPw}
           </Link>
         </Stack>
 
         <LoadingButton fullWidth size="large" type="submit" variant="contained" loading={isSubmitting}>
-          Login
+          {AUTH.nav.login}
         </LoadingButton>
       </Form>
     </FormikProvider>
