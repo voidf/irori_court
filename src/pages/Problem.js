@@ -11,9 +11,11 @@ import rehypeMathjax from 'rehype-mathjax'
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
+import AceEditor from 'react-ace';
 
 // @mui
-import { styled, useTheme } from '@mui/material/styles';
+
+import { styled, useTheme, createTheme } from '@mui/material/styles';
 import {
   Button,
   Typography,
@@ -27,8 +29,18 @@ import {
   CardContent,
   Grid,
   Paper,
+  TextareaAutosize,
+  TextField,
+  CssBaseline,
+  ThemeProvider
 } from '@mui/material';
 import { CopyBlock, dracula } from "react-code-blocks";
+import "ace-builds/src-noconflict/mode-plain_text";
+import "ace-builds/src-noconflict/theme-github";
+import "ace-builds/src-noconflict/ext-language_tools";
+
+import Consolas from '../assets/ConsolasHybrid1.12.ttf'
+
 // components
 import Iconify from '../components/Iconify';
 // import { ProductSort, ProductList, ProductCartWidget, ProductFilterSidebar } from '../sections/@dashboard/products';
@@ -47,31 +59,6 @@ const ContentStyle = styled('div')(({ theme }) => ({
   flexDirection: 'column',
   padding: theme.spacing(12, 0)
 }));
-
-// ----------------------------------------------------------------------
-
-// function MarkdownRender(props) {
-//   const newProps = {
-//       ...props,
-//       remarkPlugins: [
-//         RemarkMathPlugin,
-//         remarkGfm,
-//         rehypeRaw
-//       ],
-//       renderers: {
-//         ...props.renderers,
-//         math: (props) => 
-//           <MathJax.Node formula={props.value} />,
-//         inlineMath: (props) =>
-//           <MathJax.Node inline formula={props.value} />
-//       }
-//     };
-//     return (
-//       <MathJax.Provider input="tex">
-//           <ReactMarkdown {...newProps} />
-//       </MathJax.Provider>
-//     );
-// }
 
 const protocols = ['http', 'https', 'mailto', 'tel']
 
@@ -159,19 +146,59 @@ function wrapMathJax(s) {
 
 function DescBlock({ id, head, body, type, ...other }) {
   const theme = useTheme();
+  const consolasTheme = createTheme({
+    typography: {
+      fontFamily: 'Consolas',
+    },
+    components: {
+      MuiCssBaseline: {
+        styleOverrides: `
+        @font-face {
+          font-family: 'Consolas';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 400;
+          src: "local('Consolas'), local('Consolas-Regular'), url(${Consolas}) format('ttf')";
+          unicodeRange: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF',
+        }
+        `
+      }
+    }
+  });
   // const nbody = wrapMathJax(body);
   // console.log(nbody);
   const c = type === 'copy' ?
+  <ThemeProvider theme={consolasTheme}>
+    <CssBaseline />
     <CopyBlock
       text={body}
       language="html"
       showLineNumbers="true"
       theme={theme}
-      style={{
-        fontVariant: ['tabular-nums']
+      sx={{
+        fontFamily: 'Consolas',
       }}
       codeBlock
-    /> :
+    />
+    {/* <TextField
+      id="outlined-multiline-flexible"
+      label="Multiline"
+      multiline
+      value={body}
+      sx={{
+        fontFamily: 'Consolas',
+      }}
+    /> */}
+  </ThemeProvider>
+    // <AceEditor
+    //   value={body}
+    //   mode="plain_text"
+    //   showLineNumbers="true"
+    //   readOnly="true"
+    //   theme="github"
+    //   fontSize={20}
+    // />
+     :
     <ReactMarkdown
       children={wrapMathJax(body)}
       rehypePlugins={[
@@ -190,7 +217,7 @@ function DescBlock({ id, head, body, type, ...other }) {
       transformImageUri={uriTransformerForOss}
       />;
   return (
-    <Grid item xs={12} key={id}>
+    <Grid item xs={type==='copy'?6:12} key={id}>
       <Card {...other}>
         <CardHeader title={head} subheader="" />
 
