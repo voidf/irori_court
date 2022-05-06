@@ -35,6 +35,8 @@ const strings = new LocalizedStrings({
             solved: "通过数",
             page: "页数：",
             setPageHint: "跳转到：",
+
+            showingLang: "题面语言",
         }
     },
     en: {
@@ -71,6 +73,8 @@ const strings = new LocalizedStrings({
             solved: "solved",
             page: "page: ",
             setPageHint: "jump to page: ",
+
+            showingLang: "showing in",
 
         }
     }
