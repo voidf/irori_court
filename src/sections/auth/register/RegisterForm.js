@@ -10,7 +10,9 @@ import { LoadingButton } from '@mui/lab';
 // component
 import Iconify from '../../../components/Iconify';
 import AUTH from '../../../localization/str';
-import U from '../../../api/urls';
+
+// eslint-disable-next-line import/no-named-default
+import {default as U, jwt} from '../../../api/urls';
 
 // ----------------------------------------------------------------------
 axios.defaults.withCredentials = true;
@@ -46,6 +48,8 @@ export default function RegisterForm() {
           alert(`${STRINGS.registerFailed}${resp.data}`);
           return;
         }
+        jwt.value = resp.data.jwt;
+        axios.defaults.headers.common.jwt = jwt;
         
         navigate('/dashboard', { replace: true });
       }).catch((reason)=>{

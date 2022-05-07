@@ -8,8 +8,9 @@ import { Link, Stack, Checkbox, TextField, IconButton, InputAdornment, FormContr
 import { LoadingButton } from '@mui/lab';
 // component
 import Iconify from '../../../components/Iconify';
-import U from '../../../api/urls';
 import AUTH from '../../../localization/str';
+// eslint-disable-next-line import/no-named-default
+import {default as U, jwt} from '../../../api/urls';
 
 // ----------------------------------------------------------------------
 axios.defaults.withCredentials = true;
@@ -45,6 +46,9 @@ export default function LoginForm() {
           alert(`${STRINGS.loginFailed}${resp.data}`);
           return;
         }
+        jwt.value = resp.data.jwt;
+        axios.defaults.headers.common.jwt = jwt;
+
         
         navigate('/dashboard', { replace: true });
       }).catch((reason)=>{

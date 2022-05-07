@@ -30,15 +30,29 @@ import DropdownMenu from '../components/DropdownMenu';
 // import { ProductSort, ProductList, ProductCartWidget, ProductFilterSidebar } from '../sections/@dashboard/products';
 import Page from '../components/Page';
 // eslint-disable-next-line import/no-named-default
-import U from '../api/urls';
+import {default as U, jwt} from '../api/urls';
 import CommonDescBlock from './problemblock/common';
 import SampleBlock from './problemblock/half';
 import LOCALIZATIONPACK from '../localization/str';
+import CaseBlock from '../components/CaseBlock';
 
 // ----------------------------------------------------------------------
 const loc = LOCALIZATIONPACK.submission;
 axios.defaults.withCredentials = true;
 
+const SUBMISSION_RESULT = {
+    'AC': 'Accepted',
+    'WA': 'Wrong Answer',
+    'TLE': 'Time Limit Exceeded',
+    'MLE': 'Memory Limit Exceeded',
+    'OLE': 'Output Limit Exceeded',
+    'IR': 'Invalid Return',
+    'RTE': 'Runtime Error',
+    'CE': 'Compile Error',
+    'IE': 'Internal Error',
+    'SC': 'Short circuit',
+    'AB': 'Aborted',
+}
 
 export default function Submission() {
   const [shouldRequest, setShouldRequest] = useState(true);
@@ -54,6 +68,7 @@ export default function Submission() {
     if (shouldRequest) {
       setShouldRequest(false);
 
+      axios.defaults.headers.common.jwt = jwt.value;
       axios.get(U(`/submission/${submissionId}`), { withCredentials: true }).then(resp => {
         console.log(resp.data);
         setSub(resp.data);
@@ -79,12 +94,15 @@ export default function Submission() {
           <Typography variant="h4" gutterBottom>
             {`${loc.title} #${submissionId}`}
           </Typography>
+          {sub && (<Typography variant="subtitle1" gutterBottom>
+            {SUBMISSION_RESULT[sub.result]}
+          </Typography>)}
         </Stack>
 
         <Grid container spacing={3}>
-          {/* {problemData.desc[selectedLang.pk].map((it, index) =>
-            (<DescBlock key={index} id={index} head={it.head} body={it.body} type={it.type} />)
-          )} */}
+          {cases.map((it, index) =>
+            (<CaseBlock key={it.case} pk={it.case} result={it.status} time={it.time} memory={it.memory} />)
+          )}
 
 
         </Grid>

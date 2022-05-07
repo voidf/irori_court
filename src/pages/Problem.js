@@ -71,12 +71,13 @@ import Page from '../components/Page';
 import Iconify from '../components/Iconify';
 
 // eslint-disable-next-line import/no-named-default
-import U from '../api/urls';
+import {default as U, jwt} from '../api/urls';
 import CommonDescBlock from './problemblock/common';
 import SampleBlock from './problemblock/half';
 import LOCALIZATIONPACK from '../localization/str';
 // ----------------------------------------------------------------------
 axios.defaults.withCredentials = true;
+
 
 
 
@@ -104,6 +105,12 @@ export default function Problem() {
   const [runtimes, setRuntimes] = useState([]);
 
   const [selectedRuntime, setSelectedRuntime] = useState({pk:'CPP20', label:'CPP20', ace:'c_cpp'});
+
+  const onsetRT = (option) => {
+    console.log('new:', option);
+    console.log('li:', runtimes);
+    setSelectedRuntime(option);
+  }
 
   const [selectedLang, setSelectedLang] = useState({pk:'default', label:'Default'});
 
@@ -161,6 +168,7 @@ export default function Problem() {
     axios.get(U(`/runtime/`)).then(resp => {
       console.log(resp.data);
       setRuntimes(resp.data.data);
+      console.log(runtimes);
     }).catch(reason => {
       console.log(reason);
       console.log(reason.response);
@@ -179,6 +187,14 @@ export default function Problem() {
 
   const submit = () => {
     console.log(editor.getValue());
+    console.log({
+      source: editor.getValue(),
+      problem_id: problemData.pk,
+      lang: selectedRuntime.pk
+    });
+    console.log(selectedRuntime);
+    axios.defaults.headers.common.jwt = jwt.value;
+
     axios.post(U(`/submission/`), {
       source: editor.getValue(),
       problem_id: problemData.pk,
@@ -229,10 +245,10 @@ export default function Problem() {
                 <Stack direction="row" flexWrap="wrap-reverse" alignItems="center" justifyContent="flex-end" sx={{ mb: 5 }}>
                 <Stack direction="row" spacing={1} flexShrink={0} sx={{ my: 1, mx: 3 }}>
                     <DropdownMenu 
-                      itemList={runtimes.map((x)=>({pk:x, label:x.name?x.name:x.pk, ace:x.ace?x.ace:"plain_text"}))}
+                      itemList={runtimes.map((x)=>({pk:x.pk, label:x.name?x.name:x.pk, ace:x.ace?x.ace:"plain_text"}))}
                       hint={LOCALIZATIONPACK.problem.submitLang}
                       selected={selectedRuntime}
-                      setSelected={setSelectedRuntime}
+                      setSelected={onsetRT}
                     />
                     <Button 
                       color="inherit"
