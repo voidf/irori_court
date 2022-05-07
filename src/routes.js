@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import Products from './pages/Products';
 import DashboardApp from './pages/DashboardApp';
 import Problem from './pages/Problem';
+import Submission from './pages/Submission';
 
 // ----------------------------------------------------------------------
 
@@ -27,6 +28,7 @@ export default function Router() {
         { path: 'products', element: <Products /> },
         { path: 'blog', element: <Blog /> },
         { path: 'problem/:problemId', element: <Problem /> },
+        { path: 'submission/:submissionId', element: <Submission /> },
       ],
     },
     {

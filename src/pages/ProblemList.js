@@ -184,7 +184,7 @@ export default function ProblemList() {
 
   const [filterName, setFilterName] = useState('');
 
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [totalProblems, setTotalProblems] = useState(0);
 
@@ -266,7 +266,6 @@ export default function ProblemList() {
                 />
                 <TableBody>
                   {filteredProblems
-                    // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row) => {
                       const { pk, title, tags, difficulty, submitted, solved } = row;
 

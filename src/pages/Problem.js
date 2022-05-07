@@ -1,21 +1,12 @@
 import { Link as RouterLink, useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
 // import MathJax from 'react-mathjax';
-import remarkMath from 'remark-math';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import rehypeKatex from 'rehype-katex';
-import rehypeMathjax from 'rehype-mathjax'
-import remarkParse from 'remark-parse';
-import remarkRehype from 'remark-rehype'
-import rehypeStringify from 'rehype-stringify'
+
 import AceEditor from 'react-ace';
 
 // @mui
 
-import { styled, useTheme, createTheme } from '@mui/material/styles';
 import {
   Button,
   Typography,
@@ -34,201 +25,65 @@ import {
   CssBaseline,
   ThemeProvider
 } from '@mui/material';
-import { CopyBlock, dracula } from "react-code-blocks";
+import "ace-builds/src-noconflict/mode-ada";
+import "ace-builds/src-noconflict/mode-cobol";
+import "ace-builds/src-noconflict/mode-coffee";
+import "ace-builds/src-noconflict/mode-c_cpp";
+import "ace-builds/src-noconflict/mode-d";
+import "ace-builds/src-noconflict/mode-dart";
+import "ace-builds/src-noconflict/mode-fortran";
+import "ace-builds/src-noconflict/mode-forth";
+import "ace-builds/src-noconflict/mode-assembly_x86";
+import "ace-builds/src-noconflict/mode-golang";
+import "ace-builds/src-noconflict/mode-groovy";
+import "ace-builds/src-noconflict/mode-haskell";
+import "ace-builds/src-noconflict/mode-java";
+import "ace-builds/src-noconflict/mode-kotlin";
+import "ace-builds/src-noconflict/mode-lua";
+import "ace-builds/src-noconflict/mode-csharp";
+import "ace-builds/src-noconflict/mode-fsharp";
+import "ace-builds/src-noconflict/mode-vbscript";
+import "ace-builds/src-noconflict/mode-ocaml";
+import "ace-builds/src-noconflict/mode-pascal";
+import "ace-builds/src-noconflict/mode-perl";
+import "ace-builds/src-noconflict/mode-php";
+import "ace-builds/src-noconflict/mode-prolog";
+import "ace-builds/src-noconflict/mode-python";
+import "ace-builds/src-noconflict/mode-ruby";
+import "ace-builds/src-noconflict/mode-rust";
+import "ace-builds/src-noconflict/mode-lisp";
+import "ace-builds/src-noconflict/mode-scala";
+import "ace-builds/src-noconflict/mode-scheme";
+import "ace-builds/src-noconflict/mode-swift";
+import "ace-builds/src-noconflict/mode-tcl";
+import "ace-builds/src-noconflict/mode-javascript";
 import "ace-builds/src-noconflict/mode-plain_text";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/ext-language_tools";
 
-import Consolas from '../assets/ConsolasHybrid1.12.ttf'
 
 // components
-import Iconify from '../components/Iconify';
+
+import DropdownMenu from '../components/DropdownMenu';
+
 // import { ProductSort, ProductList, ProductCartWidget, ProductFilterSidebar } from '../sections/@dashboard/products';
 import Page from '../components/Page';
+import Iconify from '../components/Iconify';
+
 // eslint-disable-next-line import/no-named-default
-import { default as U, ossUrl} from '../api/urls';
+import U from '../api/urls';
+import CommonDescBlock from './problemblock/common';
+import SampleBlock from './problemblock/half';
 import LOCALIZATIONPACK from '../localization/str';
 // ----------------------------------------------------------------------
 axios.defaults.withCredentials = true;
-const ContentStyle = styled('div')(({ theme }) => ({
-  maxWidth: 480,
-  margin: 'auto',
-  minHeight: '100vh',
-  display: 'flex',
-  justifyContent: 'center',
-  flexDirection: 'column',
-  padding: theme.spacing(12, 0)
-}));
-
-const protocols = ['http', 'https', 'mailto', 'tel']
-
-/**
- * @param {string} uri
- * @returns {string}
- */
-function uriTransformerForOss(uri) {
-  const url = (uri || '').trim()
-  const first = url.charAt(0)
-
-  if (first === '#') {
-    return url
-  }
-  if (first === '/') {
-    const li = uri.split('/');
-    // console.log(li);
-    if(li[0]==='' && li[1]==='oss' && li[2].length===24)
-      return ossUrl + url;
-    return url;
-  }
-
-  const colon = url.indexOf(':')
-  if (colon === -1) {
-    return url
-  }
-
-  let index = -1
-  // eslint-disable-next-line no-plusplus
-  while (++index < protocols.length) {
-    const protocol = protocols[index]
-
-    if (
-      colon === protocol.length &&
-      url.slice(0, protocol.length).toLowerCase() === protocol
-    ) {
-      return url
-    }
-  }
-
-  index = url.indexOf('?')
-  if (index !== -1 && colon > index) {
-    return url
-  }
-
-  index = url.indexOf('#')
-  if (index !== -1 && colon > index) {
-    return url
-  }
-
-  // eslint-disable-next-line no-script-url
-  return 'javascript:void(0)'
-}
-
-function wrapMathJax(s) {
-  let x = false;
-  let cS = 0;
-  const output = [];
-  for (let i = 0; i < s.length; i += 1) {
-    if (s.charAt(i) === '$') {
-      if (cS === 1) {
-        if (x) {
-          output.push("}\n$$");
-        }
-        else {
-          output.push("$$ \n\\displaylines{");
-        }
-        cS = 0;
-        x = !x;
-      } else {
-        cS = 1;
-      }
-    }
-    else if (cS === 1) {
-      output.push("$");
-      output.push(s.charAt(i));
-      cS = 0;
-    } else {
-      output.push(s.charAt(i));
-    }
-
-  }
-  return output.join("");
-}
-
-function DescBlock({ id, head, body, type, ...other }) {
-  const theme = useTheme();
-  const consolasTheme = createTheme({
-    typography: {
-      fontFamily: 'Consolas',
-    },
-    components: {
-      MuiCssBaseline: {
-        styleOverrides: `
-        @font-face {
-          font-family: 'Consolas';
-          font-style: normal;
-          font-display: swap;
-          font-weight: 400;
-          src: "local('Consolas'), local('Consolas-Regular'), url(${Consolas}) format('ttf')";
-          unicodeRange: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF',
-        }
-        `
-      }
-    }
-  });
-  // const nbody = wrapMathJax(body);
-  // console.log(nbody);
-  const c = type === 'copy' ?
-  <ThemeProvider theme={consolasTheme}>
-    <CssBaseline />
-    <CopyBlock
-      text={body}
-      language="html"
-      showLineNumbers="true"
-      theme={theme}
-      sx={{
-        fontFamily: 'Consolas',
-      }}
-      codeBlock
-    />
-    {/* <TextField
-      id="outlined-multiline-flexible"
-      label="Multiline"
-      multiline
-      value={body}
-      sx={{
-        fontFamily: 'Consolas',
-      }}
-    /> */}
-  </ThemeProvider>
-    // <AceEditor
-    //   value={body}
-    //   mode="plain_text"
-    //   showLineNumbers="true"
-    //   readOnly="true"
-    //   theme="github"
-    //   fontSize={20}
-    // />
-     :
-    <ReactMarkdown
-      children={wrapMathJax(body)}
-      rehypePlugins={[
-        rehypeMathjax,
-        // rehypeKatex,
-        rehypeRaw,
-        rehypeStringify
-      ]}
-      remarkPlugins={[
-        remarkGfm,
-        remarkMath,
-        remarkParse,
-        remarkRehype
-      ]} 
-      transformLinkUri={uriTransformerForOss}
-      transformImageUri={uriTransformerForOss}
-      />;
-  return (
-    <Grid item xs={type==='copy'?6:12} key={id}>
-      <Card {...other}>
-        <CardHeader title={head} subheader="" />
-
-        <CardContent>
-          {c}
 
 
-        </CardContent>
-      </Card>
-    </Grid>
-  );
+
+
+function DescBlock({ type, ...other }) {
+  if(['sample_input', 'sample_output'].indexOf(type)!==-1) return <SampleBlock {...other}/>;
+  return <CommonDescBlock {...other}/>;
 }
 
 
@@ -246,20 +101,11 @@ export default function Problem() {
     'en',
   ]);
 
-  const [selected, setSelected] = useState('default');
+  const [runtimes, setRuntimes] = useState([]);
 
-  const [open, setOpen] = useState(null);
+  const [selectedRuntime, setSelectedRuntime] = useState({pk:'CPP20', label:'CPP20', ace:'c_cpp'});
 
-  const handleOpen = (event) => {
-    setOpen(event.currentTarget);
-    // console.log(event);
-  };
-
-  const handleClose = (event) => {
-    setOpen(null);
-    // console.log('close', event);
-  };
-
+  const [selectedLang, setSelectedLang] = useState({pk:'default', label:'Default'});
 
   const { problemId } = useParams();
 
@@ -295,31 +141,60 @@ export default function Problem() {
   const getProblem = () => {
     if (shouldRequest) {
       setShouldRequest(false);
+      getRuntime();
+
       axios.get(U(`/problem/${problemId}`), { withCredentials: true }).then(resp => {
-        // console.log(resp);
-        // resp.data.desc=resp.data.desc.replaceAll('\\n', '\n');
-        // console.log(resp.data.desc.replaceAll('\\n', '  \\n'));
         console.log(resp.data.desc);
-        // console.log(Object.keys(resp.data.desc));
-        // const li = [];
-        // resp.data.desc.keys().map(
-        // (i)=>li.push(i)
-        // );
         setLang(Object.keys(resp.data.desc));
         setProblemData(resp.data);
       }).catch(reason => {
         console.log(reason);
         console.log(reason.response);
+        
         if (reason.response.status === 404) {
           navigate('/404', { replace: true });
         }
       })
-
     }
   };
+  const getRuntime = () => {
+    axios.get(U(`/runtime/`)).then(resp => {
+      console.log(resp.data);
+      setRuntimes(resp.data.data);
+    }).catch(reason => {
+      console.log(reason);
+      console.log(reason.response);
+    })
+  };
 
-  useEffect(getProblem);
+  useEffect( () => {
+    getProblem();
+  });
 
+  // const tmp = lang.map((x)=>({pk:x, label:langMap[x]}));
+
+  // console.log('MAPPING:', tmp);
+
+  const [editor, initEditor] = useState(undefined);
+
+  const submit = () => {
+    console.log(editor.getValue());
+    axios.post(U(`/submission/`), {
+      source: editor.getValue(),
+      problem_id: problemData.pk,
+      lang: selectedRuntime.pk
+    }).then(resp=>{
+      console.log(resp);
+      console.log(resp.data.submission_id);
+      navigate(`/dashboard/submission/${resp.data.submission_id}`, {replace: true})
+    }).catch(reason=>{
+      console.log(reason);
+      console.log(reason.response);
+      if (reason.response.status === 401) {
+        alert(reason.response.data.detail);
+      }
+    });
+  };
 
 
   return (
@@ -332,47 +207,57 @@ export default function Problem() {
         </Stack>
         <Stack direction="row" flexWrap="wrap-reverse" alignItems="center" justifyContent="flex-end" sx={{ mb: 5 }}>
           <Stack direction="row" spacing={1} flexShrink={0} sx={{ my: 1 }}>
-            <>
-              <Button
-                color="inherit"
-                disableRipple
-                onClick={handleOpen}
-                endIcon={<Iconify icon={open ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} />}
-              >
-                {LOCALIZATIONPACK.problem.showingLang}:&nbsp;
-                <Typography component="span" variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                  {langMap[selected]}
-                </Typography>
-              </Button>
-              <Menu
-                keepMounted
-                anchorEl={open}
-                open={Boolean(open)}
-                onClose={handleClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-              >
-                {lang.map((option) => (
-                  <MenuItem
-                    key={option}
-                    selected={option === selected}
-                    onClick={() => {
-                      setSelected(option);
-                      handleClose();
-                    }}
-                    sx={{ typography: 'body2' }}
-                  >
-                    {langMap[option]}
-                  </MenuItem>
-                ))}
-              </Menu>
-            </>
+              <DropdownMenu 
+                itemList={lang.map((x)=>({pk:x, label:langMap[x]}))}
+                hint={LOCALIZATIONPACK.problem.showingLang}
+                selected={selectedLang}
+                setSelected={setSelectedLang}
+              />
           </Stack>
         </Stack>
         <Grid container spacing={3}>
-          {problemData.desc[selected].map((it, index) =>
+          {problemData.desc[selectedLang.pk].map((it, index) =>
             (<DescBlock key={index} id={index} head={it.head} body={it.body} type={it.type} />)
           )}
+
+        <Grid item xs={12} key="editor">
+            <Card>
+
+                <CardHeader titleTypographyProps={{ variant: 'h4' }}
+                    subheaderTypographyProps={{ variant: 'subtitle1' }}
+                    title={LOCALIZATIONPACK.problem.submit} subheader="submit" />
+                <Stack direction="row" flexWrap="wrap-reverse" alignItems="center" justifyContent="flex-end" sx={{ mb: 5 }}>
+                <Stack direction="row" spacing={1} flexShrink={0} sx={{ my: 1, mx: 3 }}>
+                    <DropdownMenu 
+                      itemList={runtimes.map((x)=>({pk:x, label:x.name?x.name:x.pk, ace:x.ace?x.ace:"plain_text"}))}
+                      hint={LOCALIZATIONPACK.problem.submitLang}
+                      selected={selectedRuntime}
+                      setSelected={setSelectedRuntime}
+                    />
+                    <Button 
+                      color="inherit"
+                      onClick={submit}
+                      endIcon={<Iconify icon="mdi-send" />}>
+                        {LOCALIZATIONPACK.problem.confirm}
+
+                    </Button>
+                </Stack>
+                </Stack>
+                <CardContent>
+                  <AceEditor
+                    width="100%"
+                    mode={selectedRuntime.ace}
+                    // onChange={onEdit}
+                    onLoad={(x)=>initEditor(x)}
+                    showLineNumbers="true"
+                    theme="github"
+                    fontSize={20}
+                  />
+                
+                </CardContent>
+            </Card>
+        </Grid>
+
         </Grid>
 
       </Container>

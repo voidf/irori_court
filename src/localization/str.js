@@ -37,6 +37,25 @@ const strings = new LocalizedStrings({
             setPageHint: "跳转到：",
 
             showingLang: "题面语言",
+            submit: "提交",
+            submitLang: "语言",
+
+            confirm: "提交代码",
+
+
+            blocks: {
+                description: '题目描述',
+                input: '输入格式',
+                output: '输出格式',
+                sample_input: '样例输入',
+                sample_output: '样例输出',
+                hint: '提示',
+                source: '来源',
+                author: '出题人',
+            }
+        },
+        submission: {
+            title: "提交记录"
         }
     },
     en: {
@@ -75,7 +94,25 @@ const strings = new LocalizedStrings({
             setPageHint: "jump to page: ",
 
             showingLang: "showing in",
+            submit: "Submit",
+            submitLang: "Language",
 
+            confirm: "submit code",
+            
+            blocks: {
+                description: 'Description',
+                input: 'Input',
+                output: 'Output',
+                sample_input: 'Sample Input',
+                sample_output: 'Sample Output',
+                hint: 'Hint',
+                source: 'Source',
+                author: 'Author',
+            }
+
+        },
+        submission: {
+            title: "Submission detail"
         }
     }
 },
